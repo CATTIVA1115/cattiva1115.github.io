@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单管理</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            max-width: 1200px; /* 调整整体宽度 */
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 28px;
+            color: #4CAF50;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            padding: 8px 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        input[type="text"], input[type="number"] {
+            padding: 8px;
+            width: calc(100% - 16px);
+            margin-top: 4px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            padding: 8px;
+            text-align: left;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-around;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>❀ 订单管理系统 ❀</h1>
+
+        <form id="order-form">
+            <div class="form-group">
+                <label for="order-number">订单号：</label>
+                <input type="text" id="order-number" name="order-number">
+            </div>
+
+            <div class="form-group">
+                <label for="xiaoyu-id">闲鱼ID：</label>
+                <input type="text" id="xiaoyu-id" name="xiaoyu-id">
+            </div>
+
+            <div class="form-group">
+                <label for="contact-info">联系方式：</label>
+                <input type="text" id="contact-info" name="contact-info">
+            </div>
+
+            <div class="form-group">
+                <label for="item">下单物品：</label>
+                <input type="text" id="item" name="item">
+            </div>
+
+            <div class="form-group">
+                <label for="order-price">下单价格：</label>
+                <input type="number" id="order-price" name="order-price">
+            </div>
+
+            <div class="form-group">
+                <label for="order-date">下单日期：</label>
+                <input type="text" id="order-date" name="order-date" placeholder="月日，例如0423">
+            </div>
+
+            <div class="form-group">
+                <label for="note">备注：</label>
+                <input type="text" id="note" name="note">
+            </div>
+
+            <div class="btn-group">
+                <button type="submit">添加订单</button>
+            </div>
+        </form>
+
+        <table id="order-table">
+            <thead>
+                <tr>
+                    <th>订单号</th>
+                    <th>闲鱼ID</th>
+                    <th>联系方式</th>
+                    <th>下单物品</th>
+                    <th>下单价格</th>
+                    <th>下单日期</th>
+                    <th>备注</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="order-list">
+                <!-- 订单列表将显示在这里 -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const orderForm = document.getElementById('order-form');
+        const orderTable = document.getElementById('order-table');
+        const orderList = document.getElementById('order-list');
+
+        // 加载已保存的订单数据
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
+            savedOrders.forEach(function(order) {
+                appendOrderToTable(order);
+            });
+        });
+
+        // 添加订单事件监听
+        orderForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // 获取表单数据
+            const orderNumber = document.getElementById('order-number').value || '-';
+            const xiaoyuId = document.getElementById('xiaoyu-id').value || '-';
+            const contactInfo = document.getElementById('contact-info').value || '-';
+            const item = document.getElementById('item').value || '-';
+            const orderPrice = document.getElementById('order-price').value || '-';
+            const orderDate = document.getElementById('order-date').value || '-';
+            const note = document.getElementById('note').value || '-';
+
+            // 创建订单对象
+            const order = {
+                orderNumber,
+                xiaoyuId,
+                contactInfo,
+                item,
+                orderPrice,
+                orderDate,
+                note
+            };
+
+            // 将订单添加到表格和本地存储
+            appendOrderToTable(order);
+            saveOrderToLocal(order);
+
+            // 重置表单
+            orderForm.reset();
+        });
+
+        // 删除订单事件监听
+        orderTable.addEventListener('click', function(event) {
+            if (event.target.classList.contains('delete-btn')) {
+                const row = event.target.closest('tr');
+                const orderNumber = row.cells[0].textContent;
+                row.remove();
+                removeOrderFromLocal(orderNumber);
+            }
+        });
+
+        // 编辑订单按钮点击事件监听
+        orderList.addEventListener('click', function(event) {
+            if (event.target.classList.contains('edit-btn')) {
+                const row = event.target.closest('tr');
+                const orderNumber = row.cells[0].textContent;
+                const order = getOrderFromLocal(orderNumber);
+                if (order) {
+                    showEditDialog(order);
+                }
+            }
+        });
+
+        // 将订单数据追加到表格中
+        function appendOrderToTable(order) {
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>${order.orderNumber}</td>
+                <td>${order.xiaoyuId}</td>
+                <td>${order.contactInfo}</td>
+                <td>${order.item}</td>
+                <td>${order.orderPrice}</td>
+                <td>${order.orderDate}</td>
+                <td>${order.note}</td>
+                <td>
+                    <button class="edit-btn">编辑</button>
+                    <button class="delete-btn">删除</button>
+                </td>
+            `;
+            orderList.appendChild(newRow);
+        }
+
+        // 将订单数据保存到本地存储
+        function saveOrderToLocal(order) {
+            const savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
+            savedOrders.push(order);
+            localStorage.setItem('orders', JSON.stringify(savedOrders));
+        }
+
+        // 从本地存储中删除订单数据
+        function removeOrderFromLocal(orderNumber) {
+            const savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
+            const updatedOrders = savedOrders.filter(order => order.orderNumber !== orderNumber);
+            localStorage.setItem('orders', JSON.stringify(updatedOrders));
+        }
+
+        // 从本地存储中获取订单数据
+        function getOrderFromLocal(orderNumber) {
+            const savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
+            return savedOrders.find(order => order.orderNumber === orderNumber);
+        }
+
+        // 显示编辑对话框
+        function showEditDialog(order) {
+            const updatedOrder = { ...order };
+            const fields = ['xiaoyuId', 'contactInfo', 'item', 'orderPrice', 'orderDate', 'note'];
+            const dialogContent = fields.map(field => `
+                <div class="form-group">
+                    <label for="${field}">${field}：</label>
+                    <input type="text" id="${field}" name="${field}" value="${updatedOrder[field]}">
+                </div>
+            `).join('');
+
+            const dialog = document.createElement('div');
+            dialog.innerHTML = dialogContent;
+
+            const saveButton = document.createElement('button');
+            saveButton.textContent = '保存修改';
+            saveButton.addEventListener('click', function() {
+                fields.forEach(field => {
+                    updatedOrder[field] = dialog.querySelector(`#${field}`).value;
+                });
+                updateOrderInTable(order.orderNumber, updatedOrder);
+                updateOrderInLocal(order.orderNumber, updatedOrder);
+                document.body.removeChild(dialogBackdrop);
+                document.body.removeChild(dialog);
+            });
+
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = '取消';
+            cancelButton.addEventListener('click', function() {
+                document.body.removeChild(dialogBackdrop);
+                document.body.removeChild(dialog);
+            });
+
+            const dialogBackdrop = document.createElement('div');
+            dialogBackdrop.classList.add('dialog-backdrop');
+            dialogBackdrop.appendChild(dialog);
+
+            dialog.appendChild(saveButton);
+            dialog.appendChild(cancelButton);
+            document.body.appendChild(dialogBackdrop);
+        }
+
+        // 更新表格中的订单数据
+        function updateOrderInTable(orderNumber, updatedOrder) {
+            const rows = orderList.querySelectorAll('tr');
+            rows.forEach(row => {
+                if (row.cells[0].textContent === orderNumber) {
+                    row.cells[1].textContent = updatedOrder.xiaoyuId;
+                    row.cells[2].textContent = updatedOrder.contactInfo;
+                    row.cells[3].textContent = updatedOrder.item;
+                    row.cells[4].textContent = updatedOrder.orderPrice;
+                    row.cells[5].textContent = updatedOrder.orderDate;
+                    row.cells[6].textContent = updatedOrder.note;
+                }
+            });
+        }
+
+        // 更新本地存储中的订单数据
+        function updateOrderInLocal(orderNumber, updatedOrder) {
+            const savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
+            const updatedOrders = savedOrders.map(order => {
+                if (order.orderNumber === orderNumber) {
+                    return updatedOrder;
+                }
+                return order;
+            });
+            localStorage.setItem('orders', JSON.stringify(updatedOrders));
+        }
+    </script>
+</body>
+</html>
