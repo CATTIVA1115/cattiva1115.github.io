@@ -12,7 +12,7 @@
         }
 
         .container {
-            max-width: 1000px; /* 调整整体宽度 */
+            max-width: 800px; /* 调整整体宽度 */
             margin: 0 auto;
             background-color: #fff;
             padding: 20px;
@@ -79,6 +79,33 @@
             display: flex;
             justify-content: space-around;
         }
+
+        .dialog-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dialog {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .dialog input[type="text"], .dialog input[type="number"] {
+            width: 100%;
+        }
+
+        .dialog button {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -92,17 +119,12 @@
             </div>
 
             <div class="form-group">
-                <label for="xiaoyu-id">联系方式：</label>
-                <input type="text" id="xiaoyu-id" name="xiaoyu-id">
-            </div>
-
-            <div class="form-group">
-                <label for="contact-info">下单物品：</label>
+                <label for="contact-info">联系方式：</label>
                 <input type="text" id="contact-info" name="contact-info">
             </div>
 
             <div class="form-group">
-                <label for="item">发货状态：</label>
+                <label for="item">下单物品：</label>
                 <input type="text" id="item" name="item">
             </div>
 
@@ -112,8 +134,13 @@
             </div>
 
             <div class="form-group">
-                <label for="order-date">下单日期：</label>
+                <label for="order-date">下单时间：</label>
                 <input type="text" id="order-date" name="order-date" placeholder="月日，例如0423">
+            </div>
+
+            <div class="form-group">
+                <label for="shipping-status">发货状态：</label>
+                <input type="text" id="shipping-status" name="shipping-status">
             </div>
 
             <div class="form-group">
@@ -132,9 +159,9 @@
                     <th>订单号</th>
                     <th>联系方式</th>
                     <th>下单物品</th>
-                    <th>发货状态</th>
                     <th>下单价格</th>
-                    <th>下单日期</th>
+                    <th>下单时间</th>
+                    <th>发货状态</th>
                     <th>备注</th>
                     <th>操作</th>
                 </tr>
@@ -164,21 +191,21 @@
 
             // 获取表单数据
             const orderNumber = document.getElementById('order-number').value || '-';
-            const xiaoyuId = document.getElementById('xiaoyu-id').value || '-';
             const contactInfo = document.getElementById('contact-info').value || '-';
             const item = document.getElementById('item').value || '-';
             const orderPrice = document.getElementById('order-price').value || '-';
             const orderDate = document.getElementById('order-date').value || '-';
+            const shippingStatus = document.getElementById('shipping-status').value || '-';
             const note = document.getElementById('note').value || '-';
 
             // 创建订单对象
             const order = {
                 orderNumber,
-                xiaoyuId,
                 contactInfo,
                 item,
                 orderPrice,
                 orderDate,
+                shippingStatus,
                 note
             };
 
@@ -217,11 +244,11 @@
             const newRow = document.createElement('tr');
             newRow.innerHTML = `
                 <td>${order.orderNumber}</td>
-                <td>${order.xiaoyuId}</td>
                 <td>${order.contactInfo}</td>
                 <td>${order.item}</td>
                 <td>${order.orderPrice}</td>
                 <td>${order.orderDate}</td>
+                <td>${order.shippingStatus}</td>
                 <td>${order.note}</td>
                 <td>
                     <button class="edit-btn">编辑</button>
@@ -254,7 +281,7 @@
         // 显示编辑对话框
         function showEditDialog(order) {
             const updatedOrder = { ...order };
-            const fields = ['xiaoyuId', 'contactInfo', 'item', 'orderPrice', 'orderDate', 'note'];
+            const fields = ['contactInfo', 'item', 'orderPrice', 'orderDate', 'shippingStatus', 'note'];
             const dialogContent = fields.map(field => `
                 <div class="form-group">
                     <label for="${field}">${field}：</label>
@@ -263,6 +290,7 @@
             `).join('');
 
             const dialog = document.createElement('div');
+            dialog.classList.add('dialog');
             dialog.innerHTML = dialogContent;
 
             const saveButton = document.createElement('button');
@@ -298,11 +326,11 @@
             const rows = orderList.querySelectorAll('tr');
             rows.forEach(row => {
                 if (row.cells[0].textContent === orderNumber) {
-                    row.cells[1].textContent = updatedOrder.xiaoyuId;
-                    row.cells[2].textContent = updatedOrder.contactInfo;
-                    row.cells[3].textContent = updatedOrder.item;
-                    row.cells[4].textContent = updatedOrder.orderPrice;
-                    row.cells[5].textContent = updatedOrder.orderDate;
+                    row.cells[1].textContent = updatedOrder.contactInfo;
+                    row.cells[2].textContent = updatedOrder.item;
+                    row.cells[3].textContent = updatedOrder.orderPrice;
+                    row.cells[4].textContent = updatedOrder.orderDate;
+                    row.cells[5].textContent = updatedOrder.shippingStatus;
                     row.cells[6].textContent = updatedOrder.note;
                 }
             });
